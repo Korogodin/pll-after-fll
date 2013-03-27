@@ -11,7 +11,7 @@ K = fix(Tmod/Tc); % Число интервалов накопления в корреляторе за время моделиров
 
 MemoryAlloc; % Резервирование памяти
 
-qcno_ist = 45*ones(1,K); % // SNR на каждом интервале, дБГц
+qcno_ist = 45*ones(1,K); % SNR на каждом интервале, дБГц
 
 Hfll = 5.5; % Hz, полоса ЧАП
 
@@ -29,7 +29,7 @@ Fc = [1 Tc 0
     0 1  Tc
     0 0  1]; % Переходная матрица для модели частоты (в темпе коррелятора)
 
-Fincorr =  [1 Tc 0
+Fincorr = [1 Tc 0
     0 1  0
     0 0  1]; % Переходная матрица набега фазы в корреляторе
 
@@ -49,22 +49,22 @@ KoP(1) = 2*(KoP(3))^(1/3);
 KoP = KoP*Tf; % Переход к коэффициентам дискретной системы
 
 Xist = [0; 0; 0]; % Истинный вектор состояния
-% S_ksi = 3.48e5; % See GLONASS, page 162
+% Расчет параметров формирующего шума. GLONASS, page 162
 alpha = 0.1; % Ширина спектра ускорения, с^-1
 std_a = 40; %СКЗ ускорения
 S_ksi = 2*(33*std_a)^2 * alpha; %Спектральная плотность формирующего шума
 stdIst = Tc*sqrt(S_ksi / Tc); %СКО формирующего шума
-nIst = randn(1,K);
+nIst = randn(1,K); 
 
 stdn_IQ = ones(1,K)*8; % СКО шума квадратурных сумм
 
-nI = 1*stdn_IQ.*randn(1,K); % // I-comp noise
-nQ = 1*stdn_IQ.*randn(1,K); % // Q-comp noise
+nI = 1*stdn_IQ.*randn(1,K); % I-comp noise
+nQ = 1*stdn_IQ.*randn(1,K); % Q-comp noise
 
 w = 0; Isum = 0; Qsum = 0; Iold = 1; Qold = 0;
 for k = 1:K
     
-    % // Расчет стат.эквивалентов корреляционных сумм
+    % Расчет стат.эквивалентов корреляционных сумм
     EpsPhi(k) = Xist(1) - Xextr(1);
     EpsW(k) = Xist(2) - Xextr(2);
     
@@ -85,19 +85,16 @@ for k = 1:K
     if w == fix(Tf/Tc)
         
         EpsPhiP(k) = Xist(1) - XextrP(1);
+        % Фазовый дискриминатор
         UdP(k) = -(I(k)*sin((XextrP(2) - Xextr(2))*Tf/2*1 + (XextrP(1) - Xextr(1))) + Q(k)*cos((XextrP(2) - Xextr(2))*Tf/2*1 + (XextrP(1) - Xextr(1))));
-        SdP = A_IQ(k);
-        %         KoP = [0.5; 0; 0];
-        XestP = XextrP + KoP*UdP(k)/SdP;                 % Вектор оценок на очередной интервал фильтра
-        XextrP = Fc*XestP;                                      % Экстраполяция на следующий интервал
-        %         XextrP = XestP;
+        SdP = A_IQ(k); % Крутизна ФД
+        XestP = XextrP + KoP*UdP(k)/SdP;  % Вектор оценок на очередной интервал 
+        XextrP = Fc*XestP;                % Экстраполяция на следующий интервал
         
-        %     Ud = f(I(k), Q(k), I(k-1), Q(k-1), ...);      % Дискриминатор
-        Ud(k) = (I(k)*Qold - Q(k)*Iold);
-        %     Sd = f(A_IQ);             % Крутизна дискриминационной характеристики
-        Sd = Tc*(A_IQ(k)*Tf/Tc)^2 * 1.3;
-        Xest = Xextr + Ko*Ud(k)/Sd;                 % Вектор оценок на очередной интервал фильтра
-        Xextr = Ff*Xest;                         % Экстраполяция на следующий интервал
+        Ud(k) = (I(k)*Qold - Q(k)*Iold); % Частотный дискриминатор
+        Sd = Tc*(A_IQ(k)*Tf/Tc)^2 * 1.3; % Крутизна ЧД
+        Xest = Xextr + Ko*Ud(k)/Sd;  % Вектор оценок на очередной интервал фильтра
+        Xextr = Ff*Xest;             % Экстраполяция на следующий интервал
         
         w = 0;
         Iold = Isum; Isum = 0;
@@ -120,7 +117,7 @@ for k = 1:K
     %     if k == 3000
     %         Xist(1) = Xist(1) + 2*pi/3;
     %     end
-    Xist = Fc*Xist + [0; 0; 1]*nIst(k)*stdIst; % Здесь может быть любая другая модель изменения истинного вектора состояния
+    Xist = Fc*Xist + [0; 0; 1]*nIst(k)*stdIst; % Модель изменения истинного вектора.
     
     if ~mod(k,fix(K/10))
         fprintf('Progress: %.0f%%\n', 100*k/K);
