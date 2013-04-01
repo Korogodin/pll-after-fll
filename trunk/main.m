@@ -4,7 +4,7 @@ clc
 
 global K
 
-Tmod = 30; % Время моделирования
+Tmod = 300; % Время моделирования
 Tf = 0.001; % Период работы фильтров
 Tc = 0.001; % Период интегрирования в корреляторе
 K = fix(Tmod/Tc); % Число интервалов накопления в корреляторе за время моделирования
@@ -19,12 +19,12 @@ Fp = [1 Tf 0
 
 Fc = [1 Tc 0
       0 1  Tc
-      0 0  1]; % Переходная матрица для модели фазы (в темпе фильтра)  
+      0 0  1]; % Переходная матрица для модели фазы   
   
 Fincorr = [1 Tc
            0 1]; % Переходная матрица набега фазы в корреляторе
     
-HPLL = [30:1:60]; % Hz, полоса ФАП
+HPLL = 45; % Hz, полоса ФАП
 CKO_W_PLL = nan(1,length(HPLL));
 CKO_W_FLL = nan(1,length(HPLL));
 CKO_Phi_PLL = nan(1,length(HPLL));
@@ -89,6 +89,7 @@ for j = 1:length(HPLL)
             
             % Фазовый дискриминатор
             UdPLL(k) = -(I(k)*sin((XextrPLL(2) - Xcorr(2))*Tf/2*1 + (XextrPLL(1) - Xcorr(1))) + Q(k)*cos((XextrPLL(2) - Xcorr(2))*Tf/2*1 + (XextrPLL(1) - Xcorr(1))));
+            UdPLL_mean(k) = A_IQ*sinc((Xist(2) - Xcorr(2))*Tf/2 /pi)*sin((Xist(2) - XextrPLL(2))*Tf/2*1 + (Xist(1) - XextrPLL(1)));
             SdPLL = A_IQ; % Крутизна ФД
             XestPLL = XextrPLL + KPLL*UdPLL(k)/SdPLL;  % Вектор оценок на очередной интервал
             XextrPLL = Fp*XestPLL;                % Экстраполяция на следующий интервал
@@ -98,7 +99,7 @@ for j = 1:length(HPLL)
             XestFLL = XextrFLL + KFLL*UdFLL(k)/SdFLL;  % Вектор оценок на очередной интервал фильтра
             XextrFLL = Ff*XestFLL;             % Экстраполяция на следующий интервал
             
-            Xcorr(2) = XextrFLL(1);
+            Xcorr(2) = XextrFLL(1); % Управляем частотой в корреляторе из ЧАП
             w = 0;
             Iold = Isum; Isum = 0;
             Qold = Qsum; Qsum = 0;
@@ -119,6 +120,8 @@ for j = 1:length(HPLL)
     CKO_Phi_PLL(j) = sqrt(mean((Err_Phi_PLL./(2*pi)*360).^2));
 end
 
+D_etta_phi = mean((UdPLL - UdPLL_mean).^2); % флуктуационная характеристика дискриминатора ФАП
+
 t = (1:K)*Tc;
 
 hF = 0;
@@ -132,5 +135,16 @@ subplot(2,1,2)
 plot(t, Err_Phi_PLL /pi * 180);
 ylabel('\delta\phi, deg');
 xlabel('t, s');
+
+% figure(2)
+% subplot(2,1,1)
+% plot(HPLL,CKO_Phi_PLL);
+% title('\Phi RMSE, \Omega RMSE')
+% ylabel('\Phi RMSE');
+% xlabel('HPLL, Hz');
+% subplot(2,1,2)
+% plot(HPLL,CKO_W_PLL);
+% ylabel('\Omega RMSE');
+% xlabel('HPLL, Hz');
 
 
