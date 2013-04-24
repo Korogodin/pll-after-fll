@@ -2,7 +2,7 @@ clear
 close all
 clc
 
-global K
+% global K
 
 f0 = 10.3e6;
 Td = 1/(5*f0);
