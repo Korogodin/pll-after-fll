@@ -1,5 +1,5 @@
-DKest = [(pi)^2 0 0; 0 (2*pi*10)^2 0; 0 0 25];
-for j1 = 1:30
+DKest = [(pi)^2 0 0; 0 (2*pi*1)^2 0; 0 0 1];
+for j1 = 1:300
     DKextr = Fp*DKest*Fp' + [0 0 0; 0 0 0; 0 0 Dksi];
     DKest = inv(inv(DKextr) + [1/DmeasNewP 0 0;0 0 0;0 0 0]);
 end
@@ -12,3 +12,4 @@ KResNewPLL.X = cell(1, 2);
 KResNewPLL.X{1} = nan(1, K);
 KResNewPLL.X{2} = nan(1, K);
 KResNewPLL.ErrX1 = zeros(1, K);
+KResNewPLL.ErrX2 = zeros(1, K);
