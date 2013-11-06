@@ -8,7 +8,7 @@ rng('shuffle'); % Reinit for randn
 doScurve = 1; %расчет дискриминационной характеристики
 doEQnoise = 0; %расчет флуктуационной характеристики
 
-Tc = 20e-3; %время накопления в корреляторе
+Tc = 1e-3; %время накопления в корреляторе
 L = 51000; %число отсчетов на интервале накопления
 Td = Tc/L; %шаг дискретизации
 f0 = 1/(3.3712*Td); %несущая частота
@@ -16,25 +16,28 @@ stdn = 8; %СКО шума приемника
 stdnIQ = sqrt((stdn^2)*L/2);
 
 %diskriminator settings
-Xist = [pi/3 1e3]; %истинные значения вектора \lambda
+Xist = [pi/3 2*pi*1e3]; %истинные значения вектора \lambda
 
-deltaPhiextr = 0; %разница между экстраполяцией ССФ и опорой ССЧ (параметр deltaPhi с волной)
-deltaWextr = 0; %разница между экстраполяцией ССФ и опорой ССЧ (параметр deltaW с волной)
+% deltaPhiextr = 0; %разница между экстраполяцией ССФ и опорой ССЧ (параметр deltaPhi с волной)
+% deltaWextr = 0; %разница между экстраполяцией ССФ и опорой ССЧ (параметр deltaW с волной)
+deltaPhioporn = pi;
 deltaWoporn = 0;
-deltaPhioporn = 0;
+
 
 
 %расчет дискриминационной характеристики
 if doScurve
     
-    Np = 15000;
+    Np = 20000;
     
-    qcno_dB = [10:2:57];
+    qcno_dB = [45];
     Nq = length(qcno_dB);
     
     diskretPhiExtr = 0.1;
-    phi_extr = [-pi:diskretPhiExtr:pi];
+    phi_extr = [pi/3-3.2*pi/3:diskretPhiExtr:pi/3+3.2*pi/3];
     Nphi = length(phi_extr);
+    
+    deltaPhi = Xist(1) - phi_extr; %!!!
     
     Scurve = zeros(1,Nphi);
     ScurveTeor = nan(1,Nphi);
@@ -64,12 +67,14 @@ if doScurve
                         
             for k = 1:Nphi
                 Xextr = [phi_extr(k) Xist(2)];
-                Xoporn = Xextr - [deltaPhiextr deltaWextr];
+                
+                deltaPhiextr = deltaPhioporn - deltaPhi(k);
+                deltaWextr = deltaWoporn - (Xist(2)-Xextr(2));
                 
                 dPhi = (deltaWextr)*Tc/2 + (deltaPhiextr);
                 
-                I = Aiq*cos((Xist(1)-Xoporn(1))+(Xist(2)-Xoporn(2))*Tc/2)*sinc((Xist(2)-Xoporn(2))*Tc/2/pi) + stdnIQ*randn(1,1);
-                Q = -Aiq*sin((Xist(1)-Xoporn(1))+(Xist(2)-Xoporn(2))*Tc/2)*sinc((Xist(2)-Xoporn(2))*Tc/2/pi) + stdnIQ*randn(1,1);
+                I = Aiq*cos(deltaPhioporn+deltaWoporn*Tc/2)*sinc(deltaWoporn*Tc/2/pi) + stdnIQ*randn(1,1);
+                Q = -Aiq*sin(deltaPhioporn+deltaWoporn*Tc/2)*sinc(deltaWoporn*Tc/2/pi) + stdnIQ*randn(1,1);
 %                 y = A * cos(2*pi*f0*(1:L)*Td + 2*pi*Xist(2)*(1:L)*Td + Xist(1)) + 1*n;
 
 %                 Iop = cos(2*pi*f0*(1:L)*Td + 2*pi*Xoporn(2)*(1:L)*Td + Xoporn(1));
@@ -84,17 +89,19 @@ if doScurve
             Scurve = Scurve + udPhi;
         end
         Scurve = Scurve / Np;
-        ScurveTeor = (A*L/2) * sinc(deltaWoporn*Tc/2/pi) * sin(0*Tc/2 + (Xist(1) - phi_extr));
+        ScurveTeor = Aiq * sin(0*Tc/2 + deltaPhi);
         
         index = find(phi_extr >= Xist(1), 1, 'first');
         SdPhi(j) = (Scurve(index-1)-Scurve(index+1))/(2*diskretPhiExtr);
-%         plot((Xist(1) - phi_extr)*180/pi, [Scurve; ScurveTeor; SdPhiTeor(j)*(Xist(1) - phi_extr); SdPhi(j)*(Xist(1) - phi_extr)]);
-%         ylim([min(Scurve) max(Scurve)]);
+        plot_ud(deltaPhi*180/pi, [Scurve; ScurveTeor; SdPhi(j)*deltaPhi; SdPhiTeor(j)*deltaPhi]);
+        ylim([min(Scurve) max(Scurve)]);
 
     end
-        plot(qcno_dB, [SdPhi; SdPhiTeor]);
-        filename = ['Tc=' num2str(Tc) '_Sd(q).mat'];
-        save(filename, 'qcno_dB','SdPhi', 'SdPhiTeor');
+    filename = ['deltaPhioporn=' num2str(deltaPhioporn*180/pi) '_ud(deltaPhioporn).mat'];
+    save(filename, 'deltaPhi', 'Scurve', 'ScurveTeor', 'SdPhiTeor', 'SdPhi'); 
+%         plot(qcno_dB, [SdPhi; SdPhiTeor]);
+%         filename = ['Tc=' num2str(Tc) '_Sd(q).mat'];
+%         save(filename, 'qcno_dB','SdPhi', 'SdPhiTeor');
 end
 
 %расчет флуктуационной характеристики
