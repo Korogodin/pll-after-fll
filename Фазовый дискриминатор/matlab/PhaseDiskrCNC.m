@@ -27,7 +27,7 @@ deltaWoporn = 0;
 
 qcno_dB = [45];
 Nq = length(qcno_dB);
-Np = 20000;
+Np = 30000;
 
 %расчет дискриминационной характеристики
 if doScurve
