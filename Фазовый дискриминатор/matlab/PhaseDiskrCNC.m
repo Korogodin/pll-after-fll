@@ -53,7 +53,7 @@ if doScurve
         Aiq = A*L/2;
         
         
-        SdPhiTeor(j) = Aiq * sinc(deltaWoporn*Tc/2/pi);
+        SdPhiTeor(j) = Aiq * erf(Aiq/(stdnIQ*sqrt(2)));
         
         for m = 1:Np
             if (~mod(m,100))
@@ -87,7 +87,7 @@ if doScurve
             Scurve = Scurve + udPhi;
         end
         Scurve = Scurve / Np;
-        ScurveTeor = Aiq * sin(0*Tc/2 + deltaPhi);
+        ScurveTeor = Aiq * sin(deltaWoporn*Tc/2 + deltaPhi).*erf(Aiq*cos(deltaPhi)/(stdnIQ*sqrt(2)));
         
         index = find(phi_extr >= Xist(1), 1, 'first');
         SdPhi(j) = (Scurve(index-1)-Scurve(index+1))/(2*diskretPhiExtr);
@@ -97,9 +97,9 @@ if doScurve
     end
     %     filename = ['deltaPhioporn=' num2str(deltaPhioporn*180/pi) '_ud(deltaPhioporn).mat'];
     %     save(filename, 'deltaPhi', 'Scurve', 'ScurveTeor', 'SdPhiTeor', 'SdPhi');
-    %         plot(qcno_dB, [SdPhi; SdPhiTeor]);
-    %         filename = ['Tc=' num2str(Tc) '_Sd(q).mat'];
-    %         save(filename, 'qcno_dB','SdPhi', 'SdPhiTeor');
+%             plot(qcno_dB, [SdPhi; SdPhiTeor]);
+%             filename = ['Tc=' num2str(Tc) '_Sd(q).mat'];
+%             save(filename, 'qcno_dB','SdPhi', 'SdPhiTeor');
 end
 
 %расчет флуктуационной характеристики
