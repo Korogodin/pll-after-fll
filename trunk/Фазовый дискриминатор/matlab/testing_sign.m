@@ -1,16 +1,16 @@
 close all
 
 stdnIQ = 8;
-qcno_dB = 35;
+qcno_dB = 45;
 qcno = 10^(qcno_dB/10);
 T = 5e-3;
 Aiq = stdnIQ*sqrt(2*T*qcno);
 
-Np = 10000;
+Np = 30000;
 
 
 
-deltaPhiOporn = [-pi:pi/180*5:pi];
+deltaPhiOporn = [-pi:pi/180*1:pi];
 Nphi = length(deltaPhiOporn);
 
 udPlus = zeros(1,Nphi);
@@ -47,5 +47,5 @@ udPlus = udPlus/Np;
 udMinus = udMinus/Np;
 
 
-plot(deltaPhiOporn*180/pi, [udPlus; udMinus; 0.5*(udPlus + udMinus); Aiq*(Pimore - Piless).*sin(deltaPhiOporn)]);
+plot(deltaPhiOporn*180/pi, [udPlus; Aiq*(Pimore - Piless).*sin(deltaPhiOporn)]);
 
