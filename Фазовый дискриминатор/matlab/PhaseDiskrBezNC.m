@@ -13,9 +13,6 @@ Td = 1/(3.3712*f0); %шаг дискретизации
 Tc = 20e-3; %время накопления в корреляторе
 L = round(Tc/Td); %число отсчетов на интервале накопления
 
-% Td = Tc/L; %шаг дискретизации
-% f0 = 1/(3.3712*Td); %несущая частота
-
 stdn = 8; %СКО шума приемника
 stdnIQ = sqrt((stdn^2)*L/2);
 
@@ -60,8 +57,7 @@ if doScurve
                 fprintf('*** Nakoplenie: %.2f%%\n', m*100/Np)
             end
             
-            udPhi = nan(1,Nphi);
-            %             n = stdn*randn(1,L);
+            udPhi = zeros(1,Nphi);
             
             for k = 1:Nphi
                 Xextr = [phi_extr(k) Xist(2)];
