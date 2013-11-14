@@ -3,7 +3,7 @@ close all
 stdnIQ = 8;
 qcno_dB = 45;
 qcno = 10^(qcno_dB/10);
-T = 5e-3;
+T = 1e-3;
 Aiq = stdnIQ*sqrt(2*T*qcno);
 
 Np = 30000;

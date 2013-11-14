@@ -19,7 +19,7 @@ hold(axes1,'all');
 % Create multiple lines using matrix input to plot
 plot1 = plot(X1,YMatrix1,'LineWidth',2,'Parent',axes1);
 set(plot1(1),'DisplayName','Scurve');
-set(plot1(2),'LineWidth',1,'Color',[1 1 0],'DisplayName','ScurveTeor');
+set(plot1(2),'LineWidth',1,'Color','red','DisplayName','ScurveTeor');
 set(plot1(3),'LineStyle','--','DisplayName','Sd');
 set(plot1(4),'LineStyle','--','DisplayName','SdTeor','Color',[0 0 0]);
 
