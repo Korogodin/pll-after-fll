@@ -13,7 +13,7 @@ for h = 1:StatFile.len_qcno_dB
         StatFile.DestW_Theor(h) = KResPLL.DteorW;
         
         if ~isnan(KalmanPLL.Band)
-            StatFile.PLL_BandBand(h) = KalmanPLL.Band;
+            StatFile.PLL_Band(h) = KalmanPLL.Band;
         end
         
     end
