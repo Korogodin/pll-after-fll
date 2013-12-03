@@ -22,23 +22,19 @@ S_ksi = 2*(33*std_a)^2 * alpha; %Спектральная плотность формирующего шума
 stdIst = sqrt(S_ksi * Tf); %СКО формирующего шума
 Dksi = stdIst^2; % Дисперсия формирующего шума
 
-qcno_dB = [23];
+qcno_dB = [45];
 Nq = length(qcno_dB);
 
-% KResPLL.CKO_W_TEOR = zeros(1, Nq);
-% KResPLL.CKO_W = zeros(1, Nq);
-% KResPLL.CKO_Phi_TEOR = zeros(1, Nq);
-% KResPLL.CKO_Phi = zeros(1, Nq);
-% KResPLL.CKO_PhiSredn = zeros(1, Nq);
-% KResPLL.Band = zeros(1, Nq);
+Ff = [1 Tf
+      0 1]; % Переходная матрица для ССЧ
 
 Fc = [1 Tc 0
-    0 1  Tc
-    0 0  1]; % Переходная матрица для модели процесса
+      0 1  Tc
+      0 0  1]; % Переходная матрица для модели процесса
 
 Fp = [1 Tf 0
-    0 1  Tf
-    0 0  1]; % Переходная матрица для ССФ
+      0 1  Tf
+      0 0  1]; % Переходная матрица для ССФ
 
 for j = 1:Nq
     
@@ -49,8 +45,11 @@ for j = 1:Nq
     
     % Крутизна и флуктуационная характеристика дискриминатора
     SdPLL = Aiq*erf(sqrt(qcno*Tc)); % крутизна ДХ ФД
-    DmeasPhi = stdnIQ^2 / SdPLL^2; % дисперсия экв. шумов ФД (на входе)
-    S_meas_phi = DmeasPhi*Tf; % СПМ шумов дискриминатора
+    DekvPhi = stdnIQ^2 / SdPLL^2; % дисперсия экв. шумов ФД (на входе) (в нуле дискр. х-ки)
+    S_meas_phi = DekvPhi*Tf; % СПМ шумов дискриминатора
+    
+    SdFLL = 1/12 * (Aiq)^2  * Tc^2; % крутизна ДХ ЧД
+    DekvW = (6/(qcno*Tc^3))*(1 + 1/(qcno*Tc)); % дисперсия экв. шумов ЧД (на входе?)
     
     %     DestPhi = 0;
     %     DestW = 0;
@@ -61,22 +60,26 @@ for j = 1:Nq
         Xist = [0; 0; 0];
         Xoporn = [0; 0; 0];
         XestPLL = [0; 0; 0];
+        XestFLL = [0; 0];
         
         nIst = randn(1,K);
         
-        KalmanPLL = CKalmanEqMesConstK(XestPLL, Fp, Tf); % вызываем класс фильтра Калмана
+        % Создаем фильтры для систем
+        KalmanFLL = CKalmanEqMesConstK(XestFLL, Ff, Tf);
+        KalmanFLL.Xextr = [0; 0];
+        
+        KalmanPLL = CKalmanEqMesConstK(XestPLL, Fp, Tf); 
         KalmanPLL.Xextr = [0; 0; 0];
         
         % ининциализация переменных / массивов + там же рассчет коэффициентов для
         % фильтра Калмана
         initPLL;
-        
-        %         tau = 30/KalmanPLL.Band; % примерное время установления переходного процесса
-        %         k_ust = find((1:K)*Tc >=tau, 1, 'first'); % индекс k, когда наступает установившийся режим
-        %         KResPLL.Band(j) = KalmanPLL.Band;
+        initFLL;
         
         I = nan(1,K);
         Q = nan(1,K);
+        Ih = nan(1,K);
+        Qh = nan(1,K);
         
         nI = stdnIQ*randn(1,K);
         nQ = stdnIQ*randn(1,K);
@@ -86,21 +89,23 @@ for j = 1:Nq
         phaseExtrOld = 0;
         
         for k = 1:K
-            
             %Xoporn(2) = (KalmanPLL.Xextr(1) - phaseExtrOld)/Tf;
             
-            Xoporn(1) = KalmanPLL.Xextr(1);
-            Xoporn(2) = KalmanPLL.Xextr(2);
-            deltaPhi = Xist(1) - Xoporn(1);
-            deltaW = Xist(2) - Xoporn(2);
+            Xoporn(2) = KalmanFLL.Xextr(2);
             
-            mI = Aiq*cos(deltaPhi+deltaW*Tc/2)*sinc(deltaW*Tc/2/pi);
-            mQ = -Aiq*sin(deltaPhi+deltaW*Tc/2)*sinc(deltaW*Tc/2/pi);
+            deltaPhiOporn = Xist(1) - Xoporn(1);
+            deltaWOporn = Xist(2) - Xoporn(2);
+            
+            mI = Aiq*cos(deltaPhiOporn+deltaWOporn*Tc/2)*sinc(deltaWOporn*Tc/2/pi);
+            mQ = -Aiq*sin(deltaPhiOporn+deltaWOporn*Tc/2)*sinc(deltaWOporn*Tc/2/pi);
             
             h = sign(randn(1));
             
             I(k) = h*mI + 1*nI(k);
             Q(k) = h*mQ + 1*nQ(k);
+            
+            
+            KResFLL.udW(k) = I(k)*Ih(k) + Q(k)*Qh(k);
             
             KResPLL.udPhi(k) = -sign(I(k)) * Q(k);
             % KResPLL.udPhi(k) = SdPLL*(Xist(1)-KalmanPLL.Xextr(1)) + stdnIQ*randn(1,1);

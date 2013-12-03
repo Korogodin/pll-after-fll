@@ -3,9 +3,9 @@ H = [1 0 0]; % это вектор-строка
 G = [0; 0; 1]; % а это вектор-столбец
 for j1 = 1:300
     DKextr = Fp*DKest*Fp' + G*G'*Dksi;
-    DKest = inv(inv(DKextr) + H'*H*(1/DmeasPhi));
+    DKest = inv(inv(DKextr) + H'*H*(1/DekvPhi));
 end
-KalmanPLL.setKoeff(DKest*H'*(1/DmeasPhi));
+KalmanPLL.setKoeff(DKest*H'*(1/DekvPhi));
 KalmanPLL.calcBand();
 KResPLL.DteorPhi = DKest(1,1);
 KResPLL.DteorW = DKest(2,2);
