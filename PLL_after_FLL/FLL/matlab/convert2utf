@@ -1,0 +1,6 @@
+#!/bin/bash
+for i in *.m
+ do
+ iconv -f cp1251 $i -t utf-8 >tmp.utf8
+ mv -f tmp.utf8 $i
+done
