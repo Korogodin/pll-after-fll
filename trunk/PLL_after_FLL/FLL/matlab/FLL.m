@@ -3,7 +3,7 @@ close all
 clc
 
 Tmod = 60; % Время моделирования
-Np = 1000; %  число прогонов схемы
+Np = 100; %  число прогонов схемы
 f0 = 10.3e6; % промежуточная частота
 Td = 1/(3.3712*f0); % интервал дискретизации
 Tms = 0.001;
@@ -21,8 +21,8 @@ stdnIQms = sqrt((stdn^2)*Lms/2);
 % Расчет параметров формирующего шума. GLONASS, page 162
 alpha = 0.1; % Ширина спектра ускорения, с^-1
 std_a = 1; %СКЗ ускорения
-S_ksi = 2*(33*std_a)^2 * alpha; %Спектральная плотность формирующего шума
-stdIst = sqrt(S_ksi * Tf); %СКО формирующего шума
+Sksi = 2*(33*std_a)^2 * alpha; %Спектральная плотность формирующего шума
+stdIst = sqrt(Sksi * Tf); %СКО формирующего шума
 Dksi = stdIst^2; % Дисперсия формирующего шума
 
 qcno_dB = [10:2:50];
@@ -46,7 +46,7 @@ for j = 1:Nq
     % Крутизна и флуктуационная характеристика дискриминатора
     SdFLL = 1/12 * (Aiq)^2  * Tc^2; % крутизна ДХ ЧД
     DekvW = (6/(qcno*Tc^3))*(1 + 1/(qcno*Tc)); % дисперсия экв. шумов ЧД (на входе?)
-    
+    Sw = DekvW*Tf;
    
     for m = 1:Np
         
@@ -125,8 +125,8 @@ for j = 1:Nq
         
         DestW = mean(KResFLL.ErrX1.^2);
 %         fprintf('CkoW = %.3f CkoWTeor = %.3f\n', sqrt(DestW)/2/pi, sqrt(KResFLL.DteorW)/2/pi)
-%         save_statistic;
-        
+        save_statistic;
+
         if ~mod(m,fix(Np/10))
             fprintf('Progress po Np: %.2f%%\n', m*100/Np);
         end
