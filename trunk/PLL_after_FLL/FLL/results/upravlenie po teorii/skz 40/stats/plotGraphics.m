@@ -18,7 +18,7 @@ xlabel('q_{c/n0}, дЅ√ц')
 xlim([15 50]);
 set(gca,'box','off');
 grid on
-ylim([0 max(sqrt(Graph.DestW_Theor)/2/pi)]);
+ylim([0 60]);
 figure
 plot(Graph.qcno_dB, Graph.FLL_Band)
 ylabel('Ўумова€ полоса, √ц')
