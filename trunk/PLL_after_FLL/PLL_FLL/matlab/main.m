@@ -3,7 +3,7 @@ close all
 clc
 
 Tmod = 60; % Время моделирования
-Np = 100; %  число прогонов схемы
+Np = 500; %  число прогонов схемы
 f0 = 10.3e6; % промежуточная частота
 Td = 1/(3.3712*f0); % интервал дискретизации
 Tms = 0.001;
@@ -99,6 +99,10 @@ for j = 1:Nq
             dWOporn = Xist(2) - Xoporn(2);
             dPhi = Xist(1) - KalmanPLL.Xextr(1);
             dW = Xist(2) - KalmanPLL.Xextr(2);
+            dPhiextr = dPhiOporn - dPhi;
+            dWextr = dWOporn - dW;
+            
+            dPhiDovorot = (dWextr)*Tc/2 + (dPhiextr);
             
             h = sign(randn(1));
             
@@ -112,12 +116,7 @@ for j = 1:Nq
                 Ih(k) = -n*Tms*Qms + Ih(k);
                 Qh(k) = n*Tms*Ims + Qh(k);
             end
-            
-            dPhiextr = dPhiOporn - dPhi;
-            dWextr = dWOporn - dW;
-            
-            dPhiDovorot = (dWextr)*Tc/2 + (dPhiextr);
-                       
+                      
             KResFLL.udW(k) = I(k)*Ih(k) + Q(k)*Qh(k);
             KResPLL.udPhi(k) = - sign((I(k)*cos(dPhiDovorot) - Q(k)*sin(dPhiDovorot))) * (I(k)*sin(dPhiDovorot) + Q(k)*cos(dPhiDovorot));
             
