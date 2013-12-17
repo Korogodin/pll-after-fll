@@ -1,21 +1,21 @@
-
 load('Stat.mat', 'StatFile');
 save('StatBackup.mat', 'StatFile');
 
-for h = 1:StatFile.len_qcno_dB
-    if qcno_dB(j) == StatFile.qcno_dB(h)
+StatFile.Std_a = std_a;
+StatFile.Tc = Tc;
+StatFile.type = 'PLL sign(I)Q';
+
+for p = 1:StatFile.len_qcno_dB
+    if qcno_dB(j) == StatFile.qcno_dB(p)
         
-        StatFile.Np(h) = StatFile.Np(h) + 1;
-        StatFile.DestPhi(h) = StatFile.DestPhi(h) + DestPhi;
-        StatFile.DestW(h) = StatFile.DestW(h) + DestW;
-        StatFile.DestPhiSredn(h) = StatFile.DestPhiSredn(h) + DestPhiSredn;
-        StatFile.DestPhi_Theor(h) = KResPLL.DteorPhi;
-        StatFile.DestW_Theor(h) = KResPLL.DteorW;
+        StatFile.Np(p) = StatFile.Np(p) + 1;
         
-        if ~isnan(KalmanPLL.Band)
-            StatFile.PLL_Band(h) = KalmanPLL.Band;
-        end
-        
+        StatFile.DestPhi(p) = StatFile.DestPhi(p) + DestPhi; 
+        StatFile.DestW(p) = StatFile.DestW(p) + DestW;
+        StatFile.DestPhiTeor(p) = KResPLL.DteorPhi;
+        StatFile.DestWTeor(p) = KResPLL.DteorW;
+        StatFile.PLLBand(p) = KalmanPLL.Band;
+                        
     end
 end
 
