@@ -3,6 +3,7 @@ save('StatBackup.mat', 'StatFile');
 
 StatFile.Std_a = std_a;
 StatFile.Tc = Tc;
+StatFile.type = 'PLL+FLL';
 
 for p = 1:StatFile.len_qcno_dB
     if qcno_dB(j) == StatFile.qcno_dB(p)
