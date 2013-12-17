@@ -3,7 +3,7 @@ close all
 clc
 
 Tmod = 60; % Время моделирования
-Np = 100; %  число прогонов схемы
+Np = 1000; %  число прогонов схемы
 f0 = 10.3e6; % промежуточная частота
 Td = 1/(3.3712*f0); % интервал дискретизации
 Tc = 0.005; % Период интегрирования в корреляторе
@@ -17,28 +17,21 @@ stdnIQ = sqrt((stdn^2)*L/2);
 
 % Расчет параметров формирующего шума. GLONASS, page 162
 alpha = 0.1; % Ширина спектра ускорения, с^-1
-std_a = 1; %СКЗ ускорения
-S_ksi = 2*(33*std_a)^2 * alpha; %Спектральная плотность формирующего шума
-stdIst = sqrt(S_ksi * Tf); %СКО формирующего шума
+std_a = 40; %СКЗ ускорения
+Sksi = 2*(33*std_a)^2 * alpha; %Спектральная плотность формирующего шума
+stdIst = sqrt(Sksi * Tf); %СКО формирующего шума
 Dksi = stdIst^2; % Дисперсия формирующего шума
 
-qcno_dB = [23];
+qcno_dB = [10:2:50];
 Nq = length(qcno_dB);
 
-% KResPLL.CKO_W_TEOR = zeros(1, Nq);
-% KResPLL.CKO_W = zeros(1, Nq);
-% KResPLL.CKO_Phi_TEOR = zeros(1, Nq);
-% KResPLL.CKO_Phi = zeros(1, Nq);
-% KResPLL.CKO_PhiSredn = zeros(1, Nq);
-% KResPLL.Band = zeros(1, Nq);
-
 Fc = [1 Tc 0
-    0 1  Tc
-    0 0  1]; % Переходная матрица для модели процесса
+      0 1  Tc
+      0 0  1]; % Переходная матрица для модели процесса
 
 Fp = [1 Tf 0
-    0 1  Tf
-    0 0  1]; % Переходная матрица для ССФ
+      0 1  Tf
+      0 0  1]; % Переходная матрица для ССФ
 
 for j = 1:Nq
     
@@ -49,13 +42,9 @@ for j = 1:Nq
     
     % Крутизна и флуктуационная характеристика дискриминатора
     SdPLL = Aiq*erf(sqrt(qcno*Tc)); % крутизна ДХ ФД
-    DmeasPhi = stdnIQ^2 / SdPLL^2; % дисперсия экв. шумов ФД (на входе)
-    S_meas_phi = DmeasPhi*Tf; % СПМ шумов дискриминатора
-    
-    %     DestPhi = 0;
-    %     DestW = 0;
-    %     DestPhiSredn = 0;
-    
+    DekvPhi = stdnIQ^2 / SdPLL^2; % дисперсия экв. шумов ФД (на входе)
+    Sphi = DekvPhi*Tf; % СПМ шумов дискриминатора
+   
     for m = 1:Np
         
         Xist = [0; 0; 0];
@@ -70,11 +59,7 @@ for j = 1:Nq
         % ининциализация переменных / массивов + там же рассчет коэффициентов для
         % фильтра Калмана
         initPLL;
-        
-        %         tau = 30/KalmanPLL.Band; % примерное время установления переходного процесса
-        %         k_ust = find((1:K)*Tc >=tau, 1, 'first'); % индекс k, когда наступает установившийся режим
-        %         KResPLL.Band(j) = KalmanPLL.Band;
-        
+              
         I = nan(1,K);
         Q = nan(1,K);
         
@@ -103,16 +88,13 @@ for j = 1:Nq
             Q(k) = h*mQ + 1*nQ(k);
             
             KResPLL.udPhi(k) = -sign(I(k)) * Q(k);
-            % KResPLL.udPhi(k) = SdPLL*(Xist(1)-KalmanPLL.Xextr(1)) + stdnIQ*randn(1,1);
-            
+                       
             KalmanPLL.Estimate(KResPLL.udPhi(k)/SdPLL);
             
-            % if k*Tc >= tau
             KResPLL.ErrX1(k) = Xist(1) - KalmanPLL.Xest(1);
             KResPLL.ErrX2(k) = Xist(2) - KalmanPLL.Xest(2);
-            KResPLL.ErrSrednPhase(k) = (2*(Xist(1)-KalmanPLL.Xest(1))+(Xist(2)-KalmanPLL.Xest(2))*Tf/2)/2;
-            % end
-            
+%             KResPLL.ErrSrednPhase(k) = (2*(Xist(1)-KalmanPLL.Xest(1))+(Xist(2)-KalmanPLL.Xest(2))*Tf/2)/2;
+                        
             %             KResPLL.X{1}(k) = KalmanPLL.Xest(1);
             %             KResPLL.X{2}(k) = KalmanPLL.Xest(2);
             %
@@ -142,37 +124,18 @@ for j = 1:Nq
             DestPhi = pi^2;
         end
         DestW = mean(KResPLL.ErrX2.^2);
-        DestPhiSredn = mean(KResPLL.ErrSrednPhase.^2);
-        fprintf('CkoPhi = %.3f CkoPhiTeor = %.3f\n', sqrt(DestPhi)*180/pi, sqrt(KResPLL.DteorPhi)*180/pi)
-%         save_statistic;
+%         DestPhiSredn = mean(KResPLL.ErrSrednPhase.^2);
+%         fprintf('CkoPhi = %.3f CkoPhiTeor = %.3f\n', sqrt(DestPhi)*180/pi, sqrt(KResPLL.DteorPhi)*180/pi)
+        save_statistic;
         
         if ~mod(m,fix(Np/10))
             fprintf('Progress po Np: %.2f%%\n', m*100/Np);
         end
         clear('KalmanPLL');
     end
-    
-    %     KResPLL.CKO_Phi_TEOR(j) = sqrt(KResPLL.DteorPhi)*180/pi;
-    %     KResPLL.CKO_W_TEOR(j) = sqrt(KResPLL.DteorW)/2 /pi;
-    %     KResPLL.CKO_Phi(j) = sqrt(DestPhi/Np)*180/pi;
-    %     KResPLL.CKO_PhiSredn(j) = sqrt(DestPhiSredn/Np)*180/pi;
-    %     KResPLL.CKO_W(j) = sqrt(DestW/Np)/2/pi;
-    
+       
     fprintf('Progress po q_cno: %.2f%%\n', j*100/Nq)
 end
 
 t = (1:K)*Tc;
-
-% plot(qcno_dB, [KResPLL.CKO_Phi; KResPLL.CKO_PhiSredn; KResPLL.CKO_Phi_TEOR]);
-% title('RMSE \phi');
-% figure
-% plot(qcno_dB, [KResPLL.CKO_W; KResPLL.CKO_W_TEOR]);
-% title('RMSE \omega');
-% figure
-% plot(qcno_dB,(KResPLL.CKO_Phi./KResPLL.CKO_Phi_TEOR -1)*100);
-% title('Procent');
-% figure
-% plot(qcno_dB, KResPLL.Band);
-% title('Bandwidth');
-
 

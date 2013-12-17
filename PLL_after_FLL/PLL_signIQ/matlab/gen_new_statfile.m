@@ -5,10 +5,9 @@ StatFile.Np = zeros(1, StatFile.len_qcno_dB);
 StatFile.DestPhi = zeros(1, StatFile.len_qcno_dB);
 StatFile.DestW = zeros(1, StatFile.len_qcno_dB);
 StatFile.DestPhiSredn = zeros(1, StatFile.len_qcno_dB);
-StatFile.DestPhi_Theor = zeros(1, StatFile.len_qcno_dB);
-StatFile.DestW_Theor = zeros(1, StatFile.len_qcno_dB);
+StatFile.DestPhiTeor = zeros(1, StatFile.len_qcno_dB);
+StatFile.DestWTeor = zeros(1, StatFile.len_qcno_dB);
 
-StatFile.PLL_Band = zeros(1, StatFile.len_qcno_dB);
-
+StatFile.PLLBand = zeros(1, StatFile.len_qcno_dB);
 
 save('Stat.mat', 'StatFile');
